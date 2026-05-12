@@ -1,5 +1,6 @@
-package com.kltyton.fufulib.api;
+package com.kltyton.fufulib.api.core;
 
+import com.kltyton.fufulib.api.AutoModelShapeProvider;
 import com.kltyton.fufulib.shape.cache.FufuModelShapeCache;
 import com.kltyton.fufulib.shape.cache.FufuModelShapeCache.IntBounds;
 import net.minecraft.core.Direction;

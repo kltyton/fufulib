@@ -1,5 +1,6 @@
 package com.kltyton.fufulib.api;
 
+import com.kltyton.fufulib.api.core.FufuShapeMode;
 import com.kltyton.fufulib.config.FufuLibConfig;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;

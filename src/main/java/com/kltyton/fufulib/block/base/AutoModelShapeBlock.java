@@ -1,5 +1,7 @@
-package com.kltyton.fufulib.api;
+package com.kltyton.fufulib.block.base;
 
+import com.kltyton.fufulib.api.AutoModelShapeProvider;
+import com.kltyton.fufulib.api.core.FufuAutoShapes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -11,6 +13,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.NotNull;
 
 public class AutoModelShapeBlock extends HorizontalDirectionalBlock implements AutoModelShapeProvider {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -38,17 +41,20 @@ public class AutoModelShapeBlock extends HorizontalDirectionalBlock implements A
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    @SuppressWarnings("deprecation")
+    public @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
         return FufuAutoShapes.shape(this, state);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+    public @NotNull VoxelShape getCollisionShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
         return FufuAutoShapes.shape(this, state);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
-    public VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos) {
+    public @NotNull VoxelShape getInteractionShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos) {
         return FufuAutoShapes.shape(this, state);
     }
 

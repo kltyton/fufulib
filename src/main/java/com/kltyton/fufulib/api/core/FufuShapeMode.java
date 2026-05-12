@@ -1,4 +1,4 @@
-package com.kltyton.fufulib.api;
+package com.kltyton.fufulib.api.core;
 
 public enum FufuShapeMode {
     BLOCK,

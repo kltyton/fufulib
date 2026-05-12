@@ -18,7 +18,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.kltyton.fufulib.Fufulib;
-import com.kltyton.fufulib.api.FufuShapeMode;
+import com.kltyton.fufulib.api.core.FufuShapeMode;
 import com.kltyton.fufulib.config.FufuLibConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
