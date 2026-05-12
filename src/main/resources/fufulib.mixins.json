@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.kltyton.fufulib.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "fufulib.refmap.json",
+  "mixins": [
+    "VoxelShapeOptimizationMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
