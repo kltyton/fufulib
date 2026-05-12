@@ -1,4 +1,4 @@
-﻿package com.kltyton.fufulib.shape.cache;
+package com.kltyton.fufulib.shape.cache;
 
 import java.util.ArrayList;
 import java.util.Arrays;

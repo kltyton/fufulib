@@ -8,6 +8,7 @@ FufuLib 是一个面向 Forge 1.20.1 的库 mod，用于从方块模型自动生
 
 - 根据原版方块模型 JSON 自动生成 `VoxelShape`。
 - 优化复杂 `VoxelShape.clip(...)` 和 `VoxelShape.forAllEdges(...)` 的运行时开销。
+- 提供一个根据生成形状自动决定占用格的简易多格方块基类。
 
 ## 环境要求
 
@@ -27,10 +28,11 @@ FufuLib 是一个面向 Forge 1.20.1 的库 mod，用于从方块模型自动生
 
 ```text
 com.kltyton.fufulib
-  api      自动模型碰撞形状的公开 API
-  config   Forge common 配置
-  shape    形状缓存、模型解析和性能分析内部实现
-  mixin    VoxelShape 运行时优化 mixin
+  api          自动模型碰撞形状的公开 API
+  block.base   自动形状方块和简易多格方块基类
+  config       Forge common 配置
+  shape        形状缓存、模型解析和性能分析内部实现
+  mixin        VoxelShape 运行时优化 mixin
 ```
 
 mod id：
@@ -86,9 +88,24 @@ public class MyDecorBlock extends HorizontalDirectionalBlock implements AutoMode
 
 需要时，也可以用同样方式重写 `getCollisionShape(...)` 和 `getInteractionShape(...)`。
 
+## 自动简易多格方块
+
+`AutoSimpleMultiBlock` 适合类似门、床这类“多个格子组成一个完整方块”的结构。区别是它不需要你手写上下、左右或前后结构，而是根据模型生成出的占用格自动决定附属部分位置。
+
+像普通方块一样注册它：
+
+```java
+public static final RegistryObject<Block> MY_BLOCK = BLOCKS.register("my_block",
+        () -> new AutoSimpleMultiBlock(
+                new ResourceLocation(MODID, "my_block"),
+                BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion()));
+```
+
+方块会用自动生成的形状判断额外占用哪些格子。放置时会检查所有占用格是否可替换，然后放置同一个方块的附属部分，类似原版门用同一种方块表示上下两半。破坏任意附属部分都会破坏中心部分，并且只掉落一次方块。中心部分被移除时，所有附属部分会被无掉落移除。
+
 ## 多格碰撞
 
-FufuLib 不会自动创建代理方块。放置、破坏、掉落、同步和归属规则通常都和具体 mod 逻辑绑定。
+对于更复杂的多格逻辑，FufuLib 仍然提供底层辅助方法。放置、破坏、掉落、同步和归属规则可以完全由你的 mod 自己控制。
 
 你可以使用这些辅助方法接入自己的代理方块系统：
 

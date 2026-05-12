@@ -1,0 +1,20 @@
+{
+  "multipart": [
+    {
+      "when": { "facing": "north"},
+      "apply": { "model": "materialmeshbag:block/big_material_mesh_bag", "y": 0 }
+    },
+    {
+      "when": { "facing": "east"},
+      "apply": { "model": "materialmeshbag:block/big_material_mesh_bag", "y": 90 }
+    },
+    {
+      "when": { "facing": "south"},
+      "apply": { "model": "materialmeshbag:block/big_material_mesh_bag", "y": 180 }
+    },
+    {
+      "when": { "facing": "west"},
+      "apply": { "model": "materialmeshbag:block/big_material_mesh_bag", "y": 270 }
+    }
+  ]
+}

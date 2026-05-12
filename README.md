@@ -8,6 +8,7 @@ It provides two main features:
 
 - Automatic `VoxelShape` generation from vanilla block model JSON files.
 - Runtime acceleration for complex `VoxelShape.clip(...)` and `VoxelShape.forAllEdges(...)` calls.
+- A simple automatic multi-block base block driven by the generated model shape.
 
 ## Requirements
 
@@ -27,10 +28,11 @@ The reobfuscated mod jar is generated under `build/libs`.
 
 ```text
 com.kltyton.fufulib
-  api      Public API for automatic model shapes
-  config   Forge common config
-  shape    Shape cache, model parser, and profiler internals
-  mixin    Runtime VoxelShape optimization mixins
+  api          Public API for automatic model shapes
+  block.base   Base blocks for automatic shapes and simple multi-blocks
+  config       Forge common config
+  shape        Shape cache, model parser, and profiler internals
+  mixin        Runtime VoxelShape optimization mixins
 ```
 
 The mod id is:
@@ -86,9 +88,24 @@ public class MyDecorBlock extends HorizontalDirectionalBlock implements AutoMode
 
 You can also override `getCollisionShape(...)` and `getInteractionShape(...)` with the same delegate when needed.
 
+## Simple Automatic Multi-Blocks
+
+`AutoSimpleMultiBlock` is a base block for door-like or bed-like structures where the whole object should behave as one block, but its occupied cells are derived from the model shape automatically.
+
+Register it like a normal block:
+
+```java
+public static final RegistryObject<Block> MY_BLOCK = BLOCKS.register("my_block",
+        () -> new AutoSimpleMultiBlock(
+                new ResourceLocation(MODID, "my_block"),
+                BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion()));
+```
+
+The block uses the generated shape to decide which extra cells are occupied. On placement it checks every occupied cell and places linked parts of the same block, similar to how vanilla doors use one block type for both halves. Breaking any linked part destroys the origin part and drops the block once. Removing the origin part removes all linked parts without extra drops.
+
 ## Multi-Block Shapes
 
-FufuLib does not create proxy blocks automatically. Placement, removal, drops, synchronization, and ownership rules are mod-specific.
+For advanced multi-blocks, FufuLib still exposes low-level helpers. Placement, removal, drops, synchronization, and ownership rules can remain fully mod-specific.
 
 Use the provided helpers to integrate with your own proxy block system:
 

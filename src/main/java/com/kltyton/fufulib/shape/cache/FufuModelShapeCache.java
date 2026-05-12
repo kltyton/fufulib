@@ -263,7 +263,8 @@ public final class FufuModelShapeCache {
                 return null;
             }
             String value = parent.getAsString();
-            current = value.contains(":") ? new ResourceLocation(value) : new ResourceLocation(current.getNamespace(), value);
+            current = value.contains(":") ?
+                    new ResourceLocation(value) : new ResourceLocation(current.getNamespace(), value);
         }
         return null;
     }
