@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPInputStream;
@@ -43,12 +46,20 @@ public final class FufuModelShapeCache {
     private static final double EPS = 1.0E-7;
 
     private static final Map<String, SplitShapeSet> SHAPE_SETS = new ConcurrentHashMap<>();
+    private static final Map<String, Future<?>> SHAPE_BUILD_TASKS = new ConcurrentHashMap<>();
+    private static final Map<String, VoxelShape> FALLBACK_SHAPES = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> OCCUPANCY = new ConcurrentHashMap<>();
     private static final Map<String, IntBounds> BOUNDS = new ConcurrentHashMap<>();
     private static final Map<ResourceLocation, ModelGeometry> GEOMETRY = new ConcurrentHashMap<>();
     private static final Map<String, String> FINGERPRINTS = new ConcurrentHashMap<>();
     private static final Map<String, CachedShapeSet> PERSISTENT = new ConcurrentHashMap<>();
     private static final AtomicBoolean SAVE_RUNNING = new AtomicBoolean(false);
+    private static final ExecutorService ASYNC_SHAPE_BUILD_EXECUTOR = Executors.newFixedThreadPool(2, runnable -> {
+        Thread thread = new Thread(runnable, Fufulib.MODID + "-model-shape-build");
+        thread.setDaemon(true);
+        thread.setPriority(Math.max(Thread.MIN_PRIORITY, Thread.NORM_PRIORITY - 2));
+        return thread;
+    });
     private static volatile boolean persistentLoaded;
     private static volatile boolean persistentDirty;
 
@@ -67,6 +78,27 @@ public final class FufuModelShapeCache {
         return shape == null ? Shapes.empty() : shape;
     }
 
+    public static VoxelShape getOrScheduleLocalShape(
+            ResourceLocation modelId,
+            Direction facing,
+            int offsetX,
+            int offsetY,
+            int offsetZ,
+            FufuShapeMode mode) {
+        String key = shapeSetKey(modelId, facing, mode);
+        SplitShapeSet set = SHAPE_SETS.get(key);
+        if (set != null) {
+            VoxelShape shape = set.shapes().get(packOffset(offsetX, offsetY, offsetZ));
+            return shape == null ? Shapes.empty() : shape;
+        }
+        scheduleShapeSetBuild(modelId, facing, mode, key);
+        return quickFallbackLocalShape(modelId, facing, offsetX, offsetY, offsetZ, mode);
+    }
+
+    public static boolean isShapeSetReady(ResourceLocation modelId, Direction facing, FufuShapeMode mode) {
+        return SHAPE_SETS.containsKey(shapeSetKey(modelId, facing, mode));
+    }
+
     public static boolean hasLocalShape(ResourceLocation modelId, Direction facing, int offsetX, int offsetY, int offsetZ, FufuShapeMode mode) {
         if (mode == FufuShapeMode.BLOCK) {
             return offsetX == 0 && offsetY == 0 && offsetZ == 0;
@@ -79,7 +111,7 @@ public final class FufuModelShapeCache {
             return loadedSet.shapes().containsKey(packed);
         }
 
-        CachedShapeSet cached = persistentCached(modelId, facing, mode);
+        CachedShapeSet cached = rawPersistentCached(modelId, facing, mode);
         if (cached != null) {
             List<AABB> boxes = cached.boxes().get(packed);
             return boxes != null && !boxes.isEmpty();
@@ -109,6 +141,21 @@ public final class FufuModelShapeCache {
 
     private static SplitShapeSet getOrCreateShapeSet(ResourceLocation modelId, Direction facing, FufuShapeMode mode) {
         return SHAPE_SETS.computeIfAbsent(shapeSetKey(modelId, facing, mode), ignored -> buildShapeSet(modelId, facing, mode));
+    }
+
+    private static void scheduleShapeSetBuild(ResourceLocation modelId, Direction facing, FufuShapeMode mode, String key) {
+        if (SHAPE_SETS.containsKey(key)) {
+            return;
+        }
+        SHAPE_BUILD_TASKS.computeIfAbsent(key, ignored -> ASYNC_SHAPE_BUILD_EXECUTOR.submit(() -> {
+            try {
+                SHAPE_SETS.computeIfAbsent(key, k -> buildShapeSet(modelId, facing, mode));
+            } catch (Exception e) {
+                LOGGER.error("[Fufu's Lib] async model shape build failed: model={}, facing={}, mode={}", modelId, facing, mode, e);
+            } finally {
+                SHAPE_BUILD_TASKS.remove(key);
+            }
+        }));
     }
 
     private static SplitShapeSet buildShapeSet(ResourceLocation modelId, Direction facing, FufuShapeMode mode) {
@@ -144,12 +191,57 @@ public final class FufuModelShapeCache {
         return set;
     }
 
+    private static VoxelShape quickFallbackLocalShape(ResourceLocation modelId, Direction facing, int offsetX, int offsetY, int offsetZ, FufuShapeMode mode) {
+        if (mode == FufuShapeMode.BLOCK) {
+            return offsetX == 0 && offsetY == 0 && offsetZ == 0 ? Shapes.block() : Shapes.empty();
+        }
+        String key = modelId + "|" + horizontalIndex(facing) + "|" + offsetX + "," + offsetY + "," + offsetZ + "|" + mode.name()
+                + "|" + modelFingerprint(modelId, mode);
+        return FALLBACK_SHAPES.computeIfAbsent(key, ignored -> buildQuickFallbackLocalShape(modelId, facing, offsetX, offsetY, offsetZ, mode));
+    }
+
+    private static VoxelShape buildQuickFallbackLocalShape(ResourceLocation modelId, Direction facing, int offsetX, int offsetY, int offsetZ, FufuShapeMode mode) {
+        long packed = packOffset(offsetX, offsetY, offsetZ);
+        CachedShapeSet cached = rawPersistentCached(modelId, facing, mode);
+        if (cached != null) {
+            return boundsShapeFromBoxes(cached.boxes().get(packed));
+        }
+
+        IntBounds bounds = getOrCreateIntBounds(modelId, facing, mode);
+        if (bounds.isEmpty()
+                || offsetX < bounds.minX() || offsetX > bounds.maxX()
+                || offsetY < bounds.minY() || offsetY > bounds.maxY()
+                || offsetZ < bounds.minZ() || offsetZ > bounds.maxZ()) {
+            return Shapes.empty();
+        }
+        return boundsShapeFromBoxes(computeLocalBoxes(modelId, facing, offsetX, offsetY, offsetZ, mode));
+    }
+
+    private static VoxelShape boundsShapeFromBoxes(List<AABB> boxes) {
+        if (boxes == null || boxes.isEmpty()) {
+            return Shapes.empty();
+        }
+        AABB bounds = null;
+        for (AABB box : boxes) {
+            if (box.maxX <= box.minX || box.maxY <= box.minY || box.maxZ <= box.minZ) {
+                continue;
+            }
+            bounds = bounds == null ? box : bounds.minmax(box);
+        }
+        return bounds == null ? Shapes.empty() : Shapes.create(bounds);
+    }
+
     private static CachedShapeSet persistentCached(ResourceLocation modelId, Direction facing, FufuShapeMode mode) {
+        CachedShapeSet cached = rawPersistentCached(modelId, facing, mode);
+        return cached == null ? null : cached.optimized();
+    }
+
+    private static CachedShapeSet rawPersistentCached(ResourceLocation modelId, Direction facing, FufuShapeMode mode) {
         if (!FufuLibConfig.PERSISTENT_MODEL_SHAPE_CACHE.get()) {
             return null;
         }
         CachedShapeSet cached = loadPersistent().get(persistentKey(modelId, facing, mode));
-        return cached != null && modelFingerprint(modelId, mode).equals(cached.fingerprint()) ? cached.optimized() : null;
+        return cached != null && modelFingerprint(modelId, mode).equals(cached.fingerprint()) ? cached : null;
     }
 
     private static void cachePersistent(ResourceLocation modelId, Direction facing, FufuShapeMode mode, SplitShapeSet set) {
@@ -796,4 +888,3 @@ public final class FufuModelShapeCache {
     private record ElementRotation(String axis, double angleRad, double originX, double originY, double originZ) {
     }
 }
-

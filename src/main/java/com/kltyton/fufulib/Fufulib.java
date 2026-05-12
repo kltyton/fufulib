@@ -25,17 +25,9 @@ import org.slf4j.Logger;
 public class Fufulib {
     public static final String MODID = "fufulib";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "materialmeshbag");
-    public static final RegistryObject<Block> MY_BLOCK = BLOCKS.register("big_material_mesh_bag",
-            () -> new AutoSimpleMultiBlock(
-                    new ResourceLocation("materialmeshbag", "big_material_mesh_bag"),
-                    BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion()));
     public Fufulib() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        BLOCKS.register(modEventBus);
-
         MinecraftForge.EVENT_BUS.register(this);
-
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FufuLibConfig.COMMON_SPEC);
     }
 

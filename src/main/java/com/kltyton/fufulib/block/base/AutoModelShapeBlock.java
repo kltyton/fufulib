@@ -20,11 +20,11 @@ public class AutoModelShapeBlock extends HorizontalDirectionalBlock implements A
 
     private final ResourceLocation modelId;
 
-    public AutoModelShapeBlock(ResourceLocation blockId, Block.Properties properties) {
+    public AutoModelShapeBlock(ResourceLocation blockId, Properties properties) {
         this(blockId, properties, true);
     }
 
-    public AutoModelShapeBlock(ResourceLocation id, Block.Properties properties, boolean idIsBlockId) {
+    public AutoModelShapeBlock(ResourceLocation id, Properties properties, boolean idIsBlockId) {
         super(properties);
         this.modelId = idIsBlockId ? FufuAutoShapes.defaultBlockModelId(id) : id;
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));

@@ -38,11 +38,11 @@ public class AutoSimpleMultiBlock extends AutoModelShapeBlock {
 
     private static final ThreadLocal<Boolean> REMOVING_PARTS = ThreadLocal.withInitial(() -> false);
 
-    public AutoSimpleMultiBlock(ResourceLocation blockId, Block.Properties properties) {
+    public AutoSimpleMultiBlock(ResourceLocation blockId, Properties properties) {
         this(blockId, properties, true);
     }
 
-    public AutoSimpleMultiBlock(ResourceLocation id, Block.Properties properties, boolean idIsBlockId) {
+    public AutoSimpleMultiBlock(ResourceLocation id, Properties properties, boolean idIsBlockId) {
         super(id, properties, idIsBlockId);
         registerDefaultState(defaultBlockState()
                 .setValue(ORIGIN_X, encodeOriginOffset(0))

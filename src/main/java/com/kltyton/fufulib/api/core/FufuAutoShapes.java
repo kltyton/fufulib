@@ -23,7 +23,7 @@ public final class FufuAutoShapes {
     }
 
     public static VoxelShape shape(AutoModelShapeProvider provider, BlockState state) {
-        return FufuModelShapeCache.getOrCreateLocalShape(
+        return FufuModelShapeCache.getOrScheduleLocalShape(
                 provider.fufu$modelId(state),
                 provider.fufu$facing(state),
                 0,
@@ -33,12 +33,29 @@ public final class FufuAutoShapes {
     }
 
     public static VoxelShape localShape(AutoModelShapeProvider provider, BlockState state, int offsetX, int offsetY, int offsetZ) {
+        return FufuModelShapeCache.getOrScheduleLocalShape(
+                provider.fufu$modelId(state),
+                provider.fufu$facing(state),
+                offsetX,
+                offsetY,
+                offsetZ,
+                provider.fufu$shapeMode(state));
+    }
+
+    public static VoxelShape exactLocalShape(AutoModelShapeProvider provider, BlockState state, int offsetX, int offsetY, int offsetZ) {
         return FufuModelShapeCache.getOrCreateLocalShape(
                 provider.fufu$modelId(state),
                 provider.fufu$facing(state),
                 offsetX,
                 offsetY,
                 offsetZ,
+                provider.fufu$shapeMode(state));
+    }
+
+    public static boolean isShapeReady(AutoModelShapeProvider provider, BlockState state) {
+        return FufuModelShapeCache.isShapeSetReady(
+                provider.fufu$modelId(state),
+                provider.fufu$facing(state),
                 provider.fufu$shapeMode(state));
     }
 
@@ -85,4 +102,3 @@ public final class FufuAutoShapes {
         void accept(int offsetX, int offsetY, int offsetZ);
     }
 }
-
