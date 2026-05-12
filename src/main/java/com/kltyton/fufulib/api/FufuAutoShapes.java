@@ -1,7 +1,7 @@
 package com.kltyton.fufulib.api;
 
-import com.kltyton.fufulib.shape.FufuModelShapeCache;
-import com.kltyton.fufulib.shape.FufuModelShapeCache.IntBounds;
+import com.kltyton.fufulib.shape.cache.FufuModelShapeCache;
+import com.kltyton.fufulib.shape.cache.FufuModelShapeCache.IntBounds;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -9,9 +9,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public final class FufuAutoShapes {
-    private FufuAutoShapes() {
-    }
-
+    @SuppressWarnings("all")
     public static ResourceLocation defaultBlockModelId(ResourceLocation blockId) {
         return new ResourceLocation(blockId.getNamespace(), "block/" + blockId.getPath());
     }

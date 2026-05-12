@@ -1,10 +1,10 @@
-package com.kltyton.fufulib.mixin;
+package com.kltyton.fufulib.mixin.net.minecraft.world.phys.shapes;
 
 import javax.annotation.Nullable;
 
 import com.kltyton.fufulib.config.FufuLibConfig;
-import com.kltyton.fufulib.shape.ShapeProfiler;
-import com.kltyton.fufulib.shape.VoxelShapeClipCache;
+import com.kltyton.fufulib.shape.debug.ShapeProfiler;
+import com.kltyton.fufulib.shape.cache.VoxelShapeClipCache;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

@@ -1,4 +1,4 @@
-package com.kltyton.fufulib.shape;
+package com.kltyton.fufulib.shape.debug;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,4 +1,4 @@
-package com.kltyton.fufulib.shape;
+package com.kltyton.fufulib.shape.cache;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,6 +24,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.kltyton.fufulib.shape.debug.ShapeProfiler;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -245,7 +246,7 @@ public final class FufuModelShapeCache {
         }
         return new ModelGeometry(bounds == null ? new AABB(0, 0, 0, 16, 16, 16) : clampToReasonableRange(bounds), parsed, count);
     }
-
+    @SuppressWarnings("all")
     private static JsonArray resolveElements(ResourceLocation modelId, int maxDepth) {
         ResourceLocation current = modelId;
         for (int i = 0; i < maxDepth; i++) {
@@ -635,7 +636,7 @@ public final class FufuModelShapeCache {
             return sha256(data.toString());
         });
     }
-
+    @SuppressWarnings("all")
     private static void appendModelChainFingerprint(StringBuilder data, ResourceLocation modelId) {
         ResourceLocation current = modelId;
         for (int i = 0; i < 16; i++) {

@@ -1,6 +1,7 @@
-package com.kltyton.fufulib.shape;
+﻿package com.kltyton.fufulib.shape.cache;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -238,9 +239,7 @@ public final class VoxelShapeClipCache {
     private int nextQueryId() {
         queryId++;
         if (queryId == 0) {
-            for (int i = 0; i < seen.length; i++) {
-                seen[i] = 0;
-            }
+            Arrays.fill(seen, 0);
             queryId = 1;
         }
         return queryId;
@@ -261,10 +260,7 @@ public final class VoxelShapeClipCache {
         if (cell < 0) {
             return 0;
         }
-        if (cell > GRID_MASK) {
-            return GRID_MASK;
-        }
-        return cell;
+        return Math.min(cell, GRID_MASK);
     }
 
     private static int cellForMax(double value) {
